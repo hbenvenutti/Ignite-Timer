@@ -1,4 +1,5 @@
 import { Play } from 'phosphor-react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 import {
@@ -11,13 +12,56 @@ import {
   TimerInput,
 } from './styles'
 
+interface NewCycleFormData {
+  task: string
+  timer: number
+}
+
+interface Cycle {
+  id: string
+  task: string
+  timer: number
+}
+
 export const Home = () => {
-  const { register, handleSubmit, watch } = useForm()
+  const [cycles, setCycles] = useState<Cycle[]>([])
+  const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
+  const [elapsedTime, setElapsedTime] = useState(0)
+
+  const { register, handleSubmit, watch, reset } = useForm<NewCycleFormData>({
+    defaultValues: { task: '', timer: 0 },
+  })
 
   const task = watch('task')
   const isSubmitDisabled = !task
 
-  const handleNewCycleCreation = () => {}
+  const handleNewCycleCreation = (data: NewCycleFormData) => {
+    const id = String(new Date().getTime())
+
+    const newCycle: Cycle = {
+      id,
+      task: data.task,
+      timer: data.timer,
+    }
+
+    setCycles((state) => [...state, newCycle])
+
+    setActiveCycleId(id)
+
+    reset()
+  }
+
+  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
+
+  const totalSeconds = activeCycle ? activeCycle.timer * 60 : 0
+
+  const remainingTime = activeCycle ? totalSeconds - elapsedTime : 0
+
+  const remainingMinutes = Math.floor(remainingTime / 60)
+  const remainingSeconds = remainingTime % 60
+
+  const minutes = String(remainingMinutes).padStart(2, '0')
+  const seconds = String(remainingSeconds).padStart(2, '0')
 
   return (
     <HomeContainer>
@@ -34,7 +78,7 @@ export const Home = () => {
 
           <label htmlFor="minutes">durante</label>
           <TimerInput
-            id="minutes"
+            id="timer"
             type="number"
             placeholder="00"
             step={5}
@@ -53,11 +97,11 @@ export const Home = () => {
         </FormContainer>
 
         <CountdownContainer>
-          <span>0</span>
-          <span>0</span>
+          <span>{minutes[0]}</span>
+          <span>{minutes[1]}</span>
           <Separator>:</Separator>
-          <span>0</span>
-          <span>0</span>
+          <span>{seconds[0]}</span>
+          <span>{seconds[1]}</span>
         </CountdownContainer>
 
         <StartCountdownButton disabled={isSubmitDisabled} type="submit">
