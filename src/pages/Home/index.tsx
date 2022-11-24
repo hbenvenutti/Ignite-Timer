@@ -1,6 +1,7 @@
 import { Play } from 'phosphor-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { differenceInSeconds } from 'date-fns'
 
 import {
   CountdownContainer,
@@ -21,19 +22,40 @@ interface Cycle {
   id: string
   task: string
   timer: number
+  startTime: Date
 }
 
 export const Home = () => {
+  // *** ---- STATES ------------------------------------------------------------------------ *** //
+
   const [cycles, setCycles] = useState<Cycle[]>([])
   const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
   const [elapsedTime, setElapsedTime] = useState(0)
+
+  // *** ---- Contexts ---------------------------------------------------------------------- *** //
 
   const { register, handleSubmit, watch, reset } = useForm<NewCycleFormData>({
     defaultValues: { task: '', timer: 0 },
   })
 
+  // *** ---- Vars -------------------------------------------------------------------------- *** //
+
   const task = watch('task')
   const isSubmitDisabled = !task
+
+  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
+
+  const timerInSeconds = activeCycle ? activeCycle.timer * 60 : 0
+
+  const remainingTime = activeCycle ? timerInSeconds - elapsedTime : 0
+
+  const remainingMinutes = Math.floor(remainingTime / 60)
+  const remainingSeconds = remainingTime % 60
+
+  const minutes = String(remainingMinutes).padStart(2, '0')
+  const seconds = String(remainingSeconds).padStart(2, '0')
+
+  // *** ---- Functions --------------------------------------------------------------------- *** //
 
   const handleNewCycleCreation = (data: NewCycleFormData) => {
     const id = String(new Date().getTime())
@@ -42,6 +64,7 @@ export const Home = () => {
       id,
       task: data.task,
       timer: data.timer,
+      startTime: new Date(),
     }
 
     setCycles((state) => [...state, newCycle])
@@ -51,17 +74,17 @@ export const Home = () => {
     reset()
   }
 
-  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
+  // *** ---- Effects ----------------------------------------------------------------------- *** //
 
-  const totalSeconds = activeCycle ? activeCycle.timer * 60 : 0
+  useEffect(() => {
+    if (activeCycle) {
+      setInterval(() => {
+        setElapsedTime(differenceInSeconds(new Date(), activeCycle.startTime))
+      }, 1000)
+    }
+  }, [activeCycle])
 
-  const remainingTime = activeCycle ? totalSeconds - elapsedTime : 0
-
-  const remainingMinutes = Math.floor(remainingTime / 60)
-  const remainingSeconds = remainingTime % 60
-
-  const minutes = String(remainingMinutes).padStart(2, '0')
-  const seconds = String(remainingSeconds).padStart(2, '0')
+  // *** ---- TSX --------------------------------------------------------------------------- *** //
 
   return (
     <HomeContainer>
