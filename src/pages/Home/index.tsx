@@ -71,16 +71,29 @@ export const Home = () => {
 
     setActiveCycleId(id)
 
+    setElapsedTime(0)
+
     reset()
   }
 
   // *** ---- Effects ----------------------------------------------------------------------- *** //
 
   useEffect(() => {
+    if (activeCycle)
+      document.title = `${minutes}:${seconds} - ${activeCycle.task}`
+  }, [minutes, seconds, activeCycle])
+
+  useEffect(() => {
+    let interval: number
+
     if (activeCycle) {
-      setInterval(() => {
+      interval = setInterval(() => {
         setElapsedTime(differenceInSeconds(new Date(), activeCycle.startTime))
       }, 1000)
+    }
+
+    return () => {
+      clearInterval(interval)
     }
   }, [activeCycle])
 
