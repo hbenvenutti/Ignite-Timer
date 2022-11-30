@@ -1,29 +1,8 @@
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useState,
-  useEffect,
-} from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 
-import { Cycle } from './@types/cycle'
+import type { Cycle, CycleContextData, CycleData, CycleProps } from './@types'
 
-interface CycleContextData {
-  activeCycle: Cycle | undefined
-  activeCycleId: string | null
-  cycles: Cycle[]
-  elapsedTime: number
-
-  finishCycle: () => void
-  updateElapsedTime: (value: number) => void
-  updateActiveCycleId: (value: string | null) => void
-  addNewCycle: (newCycle: Cycle) => void
-  interruptCycle: () => void
-}
-
-interface CycleProps {
-  children: ReactNode
-}
+// ---------------------------------------------------------------------------------------------- //
 
 const CyclesContext = createContext<CycleContextData>({} as CycleContextData)
 
@@ -49,20 +28,21 @@ export const CyclesContextProvider = ({ children }: CycleProps) => {
 
   // -------------------------------------------------------------------------------------------- //
 
-  const updateElapsedTime = (value: number) => {
-    setElapsedTime(value)
-  }
+  const createNewCycle = (data: CycleData) => {
+    const id = String(new Date().getTime())
 
-  // -------------------------------------------------------------------------------------------- //
+    const newCycle: Cycle = {
+      id,
+      task: data.task,
+      timer: data.timer,
+      startTime: new Date(),
+    }
 
-  const updateActiveCycleId = (value: string | null) => {
-    setActiveCycleId(value)
-  }
-
-  // -------------------------------------------------------------------------------------------- //
-
-  const addNewCycle = (newCycle: Cycle) => {
     setCycles((state) => [...state, newCycle])
+
+    setActiveCycleId(id)
+
+    setElapsedTime(0)
   }
 
   // -------------------------------------------------------------------------------------------- //
@@ -77,6 +57,8 @@ export const CyclesContextProvider = ({ children }: CycleProps) => {
     })
 
     setCycles(alteredCycles)
+
+    setActiveCycleId(null)
   }
 
   // *** ---- Use Effects ------------------------------------------------------------------- *** //
@@ -96,9 +78,7 @@ export const CyclesContextProvider = ({ children }: CycleProps) => {
         cycles,
         elapsedTime,
         finishCycle,
-        updateElapsedTime,
-        updateActiveCycleId,
-        addNewCycle,
+        createNewCycle,
         interruptCycle,
       }}
     >

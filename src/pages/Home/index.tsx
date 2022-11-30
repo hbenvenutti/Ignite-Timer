@@ -9,23 +9,15 @@ import {
 
 import { NewCycleForm } from './components/New-Cycle-Form'
 import { Countdown } from './components/Countdown'
-import { Cycle } from '../../hooks/Cycle-Context/@types/cycle'
 import { useCycles } from '../../hooks/Cycle-Context'
 
-interface NewCycleFormData {
-  task: string
-  timer: number
-}
+import type { NewCycleFormData } from './@types'
+
+// ---------------------------------------------------------------------------------------------- //
 
 export const Home = () => {
   // *** ---- Contexts ---------------------------------------------------------------------- *** //
-  const {
-    activeCycle,
-    updateActiveCycleId,
-    updateElapsedTime,
-    addNewCycle,
-    interruptCycle,
-  } = useCycles()
+  const { activeCycle, createNewCycle, interruptCycle } = useCycles()
 
   const newCycleForm = useForm<NewCycleFormData>({
     defaultValues: { task: '', timer: 0 },
@@ -39,21 +31,8 @@ export const Home = () => {
 
   // *** ---- Functions --------------------------------------------------------------------- *** //
 
-  const handleNewCycleCreation = (data: NewCycleFormData) => {
-    const id = String(new Date().getTime())
-
-    const newCycle: Cycle = {
-      id,
-      task: data.task,
-      timer: data.timer,
-      startTime: new Date(),
-    }
-
-    addNewCycle(newCycle)
-
-    updateActiveCycleId(id)
-
-    updateElapsedTime(0)
+  const handleCycleCreation = (data: NewCycleFormData) => {
+    createNewCycle(data)
 
     reset()
   }
@@ -62,15 +41,13 @@ export const Home = () => {
 
   const handleCycleInterruption = () => {
     interruptCycle()
-
-    updateActiveCycleId(null)
   }
 
   // *** ---- TSX --------------------------------------------------------------------------- *** //
 
   return (
     <HomeContainer>
-      <form onSubmit={handleSubmit(handleNewCycleCreation)} action="">
+      <form onSubmit={handleSubmit(handleCycleCreation)} action="">
         <FormProvider {...newCycleForm}>
           <NewCycleForm />
         </FormProvider>
