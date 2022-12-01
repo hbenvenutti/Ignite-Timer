@@ -22,6 +22,7 @@ export interface CycleContextData {
   finishCycle: () => void
   createNewCycle: (data: CycleData) => void
   interruptCycle: () => void
+  updateElapsedTime: (time: number) => void
 }
 
 export interface CycleProps {

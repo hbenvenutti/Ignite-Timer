@@ -61,6 +61,11 @@ export const CyclesContextProvider = ({ children }: CycleProps) => {
     setActiveCycleId(null)
   }
 
+  // -------------------------------------------------------------------------------------------- //
+  const updateElapsedTime = (time: number): void => {
+    setElapsedTime(time)
+  }
+
   // *** ---- Use Effects ------------------------------------------------------------------- *** //
   useEffect(() => {
     const newActiveCycle = cycles.find((cycle) => cycle.id === activeCycleId)
@@ -80,6 +85,7 @@ export const CyclesContextProvider = ({ children }: CycleProps) => {
         finishCycle,
         createNewCycle,
         interruptCycle,
+        updateElapsedTime,
       }}
     >
       {children}
