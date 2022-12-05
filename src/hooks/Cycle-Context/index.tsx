@@ -1,29 +1,90 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useReducer,
+} from 'react'
 
-import type { Cycle, CycleContextData, CycleData, CycleProps } from './@types'
+import { ActionType } from './@types'
+
+import type {
+  Cycle,
+  CycleAction,
+  CycleContextData,
+  CycleData,
+  CycleProps,
+  CyclesState,
+} from './@types'
 
 // ---------------------------------------------------------------------------------------------- //
 
 const CyclesContext = createContext<CycleContextData>({} as CycleContextData)
 
 export const CyclesContextProvider = ({ children }: CycleProps) => {
-  const [cycles, setCycles] = useState<Cycle[]>([])
-  const [activeCycle, setActiveCycle] = useState<Cycle | undefined>({} as Cycle)
-  const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
+  const [cyclesState, dispatch] = useReducer(
+    (state: CyclesState, action: CycleAction) => {
+      switch (action.type) {
+        case 'CREATE_CYCLE':
+          if (!action.payload.cycle) return state
+
+          return {
+            ...state,
+            cycles: [...state.cycles, action.payload.cycle as Cycle],
+            activeCycleId: action.payload.cycle.id,
+          }
+
+        case 'INTERRUPT_CYCLE':
+          return {
+            ...state,
+            cycles: state.cycles.map((cycle) => {
+              if (cycle.id === state.activeCycleId) {
+                return { ...cycle, interruptedDate: new Date() }
+              }
+
+              return cycle
+            }),
+            activeCycleId: null,
+          }
+
+        case 'FINISH_CYCLE':
+          return {
+            ...state,
+            cycles: state.cycles.map((cycle) => {
+              if (cycle.id === state.activeCycleId) {
+                return { ...cycle, finishedDate: new Date() }
+              }
+
+              return cycle
+            }),
+
+            activeCycleId: null,
+          }
+
+        default:
+          return state
+      }
+    },
+    { cycles: [], activeCycleId: null },
+  )
+
+  // *** ---- States ------------------------------------------------------------------------ *** //
+
   const [elapsedTime, setElapsedTime] = useState(0)
+
+  // *** ---- Variables --------------------------------------------------------------------- *** //
+  const { cycles, activeCycleId } = cyclesState
+  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
 
   // *** ---- Functions --------------------------------------------------------------------- *** //
 
   const finishCycle = (): void => {
-    const alteredCycles = cycles.map((cycle) => {
-      if (cycle.id === activeCycleId) {
-        return { ...cycle, finishedDate: new Date() }
-      }
-
-      return cycle
+    dispatch({
+      type: ActionType.FINISH_CYCLE,
+      payload: {
+        activeCycleId,
+      },
     })
-
-    setCycles(alteredCycles)
   }
 
   // -------------------------------------------------------------------------------------------- //
@@ -38,9 +99,12 @@ export const CyclesContextProvider = ({ children }: CycleProps) => {
       startTime: new Date(),
     }
 
-    setCycles((state) => [...state, newCycle])
-
-    setActiveCycleId(id)
+    dispatch({
+      type: ActionType.CREATE_CYCLE,
+      payload: {
+        cycle: newCycle,
+      },
+    })
 
     setElapsedTime(0)
   }
@@ -48,17 +112,12 @@ export const CyclesContextProvider = ({ children }: CycleProps) => {
   // -------------------------------------------------------------------------------------------- //
 
   const interruptCycle = () => {
-    const alteredCycles = cycles.map((cycle) => {
-      if (cycle.id === activeCycleId) {
-        return { ...cycle, interruptedDate: new Date() }
-      }
-
-      return cycle
+    dispatch({
+      type: ActionType.INTERRUPT_CYCLE,
+      payload: {
+        activeCycleId,
+      },
     })
-
-    setCycles(alteredCycles)
-
-    setActiveCycleId(null)
   }
 
   // -------------------------------------------------------------------------------------------- //
@@ -68,9 +127,8 @@ export const CyclesContextProvider = ({ children }: CycleProps) => {
 
   // *** ---- Use Effects ------------------------------------------------------------------- *** //
   useEffect(() => {
-    const newActiveCycle = cycles.find((cycle) => cycle.id === activeCycleId)
-
-    setActiveCycle(newActiveCycle)
+    // const newActiveCycle = cycles.find((cycle) => cycle.id === activeCycleId)
+    // setActiveCycle(newActiveCycle)
   }, [activeCycleId, cycles])
 
   // *** ---- TSX --------------------------------------------------------------------------- *** //
