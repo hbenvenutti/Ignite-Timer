@@ -7,7 +7,11 @@ import {
 } from 'react'
 
 import { cyclesReducer } from '../../reducers/cycles'
-import { ActionTypes } from '../../reducers/cycles/enums'
+import {
+  createCycleAction,
+  finishCycleAction,
+  interruptCycleAction,
+} from '../../reducers/cycles/actions'
 
 import type { Cycle, CycleContextData, CycleData, CycleProps } from './@types'
 
@@ -32,12 +36,7 @@ export const CyclesContextProvider = ({ children }: CycleProps) => {
   // *** ---- Functions --------------------------------------------------------------------- *** //
 
   const finishCycle = (): void => {
-    dispatch({
-      type: ActionTypes.FINISH_CYCLE,
-      payload: {
-        activeCycleId,
-      },
-    })
+    dispatch(finishCycleAction())
   }
 
   // -------------------------------------------------------------------------------------------- //
@@ -52,12 +51,7 @@ export const CyclesContextProvider = ({ children }: CycleProps) => {
       startTime: new Date(),
     }
 
-    dispatch({
-      type: ActionTypes.CREATE_CYCLE,
-      payload: {
-        cycle: newCycle,
-      },
-    })
+    dispatch(createCycleAction(newCycle))
 
     setElapsedTime(0)
   }
@@ -65,12 +59,7 @@ export const CyclesContextProvider = ({ children }: CycleProps) => {
   // -------------------------------------------------------------------------------------------- //
 
   const interruptCycle = () => {
-    dispatch({
-      type: ActionTypes.INTERRUPT_CYCLE,
-      payload: {
-        activeCycleId,
-      },
-    })
+    dispatch(interruptCycleAction())
   }
 
   // -------------------------------------------------------------------------------------------- //

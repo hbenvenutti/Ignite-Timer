@@ -4,9 +4,8 @@ import type { Cycle } from '../../../hooks/Cycle-Context'
 
 export interface CycleAction {
   type: ActionTypes
-  payload: {
-    cycle?: Cycle
-    activeCycleId?: string | null
+  payload?: {
+    cycle: Cycle
   }
 }
 

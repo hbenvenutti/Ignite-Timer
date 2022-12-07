@@ -6,7 +6,7 @@ import type { Cycle } from '../../hooks/Cycle-Context/@types'
 export const cyclesReducer = (state: CyclesState, action: CycleAction) => {
   switch (action.type) {
     case ActionTypes.CREATE_CYCLE:
-      if (!action.payload.cycle) return state
+      if (!action.payload) return state
 
       return {
         ...state,
