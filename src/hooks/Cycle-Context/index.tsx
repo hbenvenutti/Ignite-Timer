@@ -6,67 +6,20 @@ import {
   useReducer,
 } from 'react'
 
-import { ActionType } from './@types'
+import { cyclesReducer } from '../../reducers/cycles'
+import { ActionTypes } from '../../reducers/cycles/enums'
 
-import type {
-  Cycle,
-  CycleAction,
-  CycleContextData,
-  CycleData,
-  CycleProps,
-  CyclesState,
-} from './@types'
+import type { Cycle, CycleContextData, CycleData, CycleProps } from './@types'
 
 // ---------------------------------------------------------------------------------------------- //
 
 const CyclesContext = createContext<CycleContextData>({} as CycleContextData)
 
 export const CyclesContextProvider = ({ children }: CycleProps) => {
-  const [cyclesState, dispatch] = useReducer(
-    (state: CyclesState, action: CycleAction) => {
-      switch (action.type) {
-        case 'CREATE_CYCLE':
-          if (!action.payload.cycle) return state
-
-          return {
-            ...state,
-            cycles: [...state.cycles, action.payload.cycle as Cycle],
-            activeCycleId: action.payload.cycle.id,
-          }
-
-        case 'INTERRUPT_CYCLE':
-          return {
-            ...state,
-            cycles: state.cycles.map((cycle) => {
-              if (cycle.id === state.activeCycleId) {
-                return { ...cycle, interruptedDate: new Date() }
-              }
-
-              return cycle
-            }),
-            activeCycleId: null,
-          }
-
-        case 'FINISH_CYCLE':
-          return {
-            ...state,
-            cycles: state.cycles.map((cycle) => {
-              if (cycle.id === state.activeCycleId) {
-                return { ...cycle, finishedDate: new Date() }
-              }
-
-              return cycle
-            }),
-
-            activeCycleId: null,
-          }
-
-        default:
-          return state
-      }
-    },
-    { cycles: [], activeCycleId: null },
-  )
+  const [cyclesState, dispatch] = useReducer(cyclesReducer, {
+    cycles: [],
+    activeCycleId: null,
+  })
 
   // *** ---- States ------------------------------------------------------------------------ *** //
 
@@ -80,7 +33,7 @@ export const CyclesContextProvider = ({ children }: CycleProps) => {
 
   const finishCycle = (): void => {
     dispatch({
-      type: ActionType.FINISH_CYCLE,
+      type: ActionTypes.FINISH_CYCLE,
       payload: {
         activeCycleId,
       },
@@ -100,7 +53,7 @@ export const CyclesContextProvider = ({ children }: CycleProps) => {
     }
 
     dispatch({
-      type: ActionType.CREATE_CYCLE,
+      type: ActionTypes.CREATE_CYCLE,
       payload: {
         cycle: newCycle,
       },
@@ -113,7 +66,7 @@ export const CyclesContextProvider = ({ children }: CycleProps) => {
 
   const interruptCycle = () => {
     dispatch({
-      type: ActionType.INTERRUPT_CYCLE,
+      type: ActionTypes.INTERRUPT_CYCLE,
       payload: {
         activeCycleId,
       },
