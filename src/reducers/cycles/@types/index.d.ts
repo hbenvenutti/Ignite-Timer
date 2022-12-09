@@ -1,7 +1,6 @@
 import { ActionTypes } from '../enums'
 
-import type { Cycle } from '../../../hooks/Cycle-Context'
-
+import type { Cycle } from '../../../hooks/Cycle-Context/@types'
 export interface CycleAction {
   type: ActionTypes
   payload?: {
