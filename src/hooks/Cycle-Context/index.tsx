@@ -1,3 +1,5 @@
+import { differenceInSeconds } from 'date-fns'
+import superjson from 'superjson'
 import {
   createContext,
   useContext,
@@ -13,6 +15,7 @@ import {
   interruptCycleAction,
 } from '../../reducers/cycles/actions'
 
+import type { CyclesState } from '../../reducers/cycles/@types'
 import type { Cycle, CycleContextData, CycleData, CycleProps } from './@types'
 
 // ---------------------------------------------------------------------------------------------- //
@@ -20,21 +23,35 @@ import type { Cycle, CycleContextData, CycleData, CycleProps } from './@types'
 const CyclesContext = createContext<CycleContextData>({} as CycleContextData)
 
 export const CyclesContextProvider = ({ children }: CycleProps) => {
-  const [cyclesState, dispatch] = useReducer(cyclesReducer, {
-    cycles: [],
-    activeCycleId: null,
-  })
+  const [cyclesState, dispatch] = useReducer(
+    cyclesReducer,
+    {
+      cycles: [],
+      activeCycleId: null,
+    } as CyclesState,
+    (initialValue) => {
+      const cyclesCacheJSON = localStorage.getItem(
+        '@ignite-timer:cycles-state-1.0.0',
+      )
 
-  // *** ---- States ------------------------------------------------------------------------ *** //
+      if (!cyclesCacheJSON) return initialValue
 
-  const [elapsedTime, setElapsedTime] = useState(0)
+      return superjson.parse<CyclesState>(cyclesCacheJSON)
+    },
+  )
 
   // *** ---- Variables --------------------------------------------------------------------- *** //
   const { cycles, activeCycleId } = cyclesState
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
 
-  // *** ---- Functions --------------------------------------------------------------------- *** //
+  // *** ---- States ------------------------------------------------------------------------ *** //
+  const [elapsedTime, setElapsedTime] = useState(() => {
+    if (!activeCycle) return 0
 
+    return differenceInSeconds(new Date(), activeCycle.startTime)
+  })
+
+  // *** ---- Functions --------------------------------------------------------------------- *** //
   const finishCycle = (): void => {
     dispatch(finishCycleAction())
   }
@@ -69,9 +86,12 @@ export const CyclesContextProvider = ({ children }: CycleProps) => {
 
   // *** ---- Use Effects ------------------------------------------------------------------- *** //
   useEffect(() => {
-    // const newActiveCycle = cycles.find((cycle) => cycle.id === activeCycleId)
-    // setActiveCycle(newActiveCycle)
-  }, [activeCycleId, cycles])
+    if (!cyclesState) return
+
+    const stateJSON = superjson.stringify(cyclesState)
+
+    localStorage.setItem('@ignite-timer:cycles-state-1.0.0', stateJSON)
+  }, [cyclesState])
 
   // *** ---- TSX --------------------------------------------------------------------------- *** //
 
